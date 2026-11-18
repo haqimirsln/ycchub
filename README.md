@@ -1,17 +1,23 @@
 # YCC Hub
 
 Club management for the Young Conservationist Club (YCC), Universiti Malaysia Terengganu.
+Live at **https://conservems.my/ycc-hub**.
 
-- Public landing page with upcoming programs, a live Instagram feed and the LinkedIn link
-- Self-registration with exco approval (email on approve/reject)
-- Programs with capacity, registration deadline, posters, drafts and cancellation
-- Attendance by tap-to-mark sheet or QR self check-in, walk-ins included
-- Activity status (New / Active / At-Risk / Inactive) with semester-break pauses
-- Exco dashboard, member list with WhatsApp links, CSV export (logged for PDPA)
-- Admin analytics: every member listed by status, members about to slip, breakdown by faculty and year, 12-month attendance trend, most engaged members
-- Admin: roles, suspend/reinstate, social links, Instagram token, export log
+- Public landing page with upcoming events, Instagram posts, "Meet the MT" and how to join
+- Sign-up with MT approval by matric number (email on approve/reject), teams and faculties
+- Events with venue or online link, seats, deadline, poster, committee (AJK), drafts and cancellation
+- Attendance by QR self check-in or MT marking, walk-ins included; one-click printable event report
+- Activity status (New / Active / At-Risk / Inactive) with semester-break pauses, and "slipping soon" warnings
+- Merit and demerit (automatic and by hand), event feedback ratings
+- Email members: rich editor with pictures, audience filters, preview, batched sending, opt-out
+- Event reminder emails, and phone notifications (Web Push) for reminders and new events
+- MT positions per session with yearly handover, Our MT page, team leaders
+- Analytics by status, team, faculty and year; activity log; advisor view-only role
+- Installable on phones as an app (PWA)
 
 Stack: Laravel 13, PHP 8.3+, MySQL 8 / MariaDB 10.4+, Blade + Alpine.js, Tailwind CSS 4 (built with Vite).
+
+**Documentation:** see [`docs/`](docs/README.md): user manual, the six project documents (PRD, TRD, App Flow, Design Brief, Backend Schema, Implementation Plan) and [deployment notes](docs/DEPLOYMENT.md).
 
 ---
 
@@ -19,9 +25,10 @@ Stack: Laravel 13, PHP 8.3+, MySQL 8 / MariaDB 10.4+, Blade + Alpine.js, Tailwin
 
 | Role | Can do |
 |------|--------|
-| member | Portal, register/cancel programs, QR check-in, edit profile |
-| exco | Everything a member can, plus approvals, programs, attendance, dashboard, CSV export |
-| admin | Everything an exco can, plus analytics, roles, suspend accounts, delete programs, settings, export log, edit locked attendance |
+| member | My hub, register/cancel events, QR check-in, rate events, merit, profile, phone notifications |
+| MT (`admin`) | Everything a member can, plus approvals, events, attendance, event reports, members, merit, analytics, email members, settings |
+| superadmin | Everything the MT can, plus roles and positions, deleting accounts and events, activity log, session handover, editing locked attendance |
+| advisor | Sees every MT page read-only (for the Penasihat); left out of member counts and merit |
 
 ## 2. Activity status rules
 
@@ -142,12 +149,13 @@ Right-click > **Change Permissions** if needed.
 
 **Step 15. Set up the cron job.** cPanel > **Cron Jobs**:
 - Common Settings: **Once Per Minute** (`* * * * *`)
-- Command:
+- Command (Settings > Cron job shows this line with your real path and a Copy button):
 ```
-/opt/cpanel/ea-php83/root/usr/bin/php /home/cpuser/public_html/ycc-hub/artisan schedule:run >> /dev/null 2>&1
+cd /home/cpuser/public_html/ycc-hub && /usr/local/bin/ea-php83 artisan schedule:run >> /dev/null 2>&1
 ```
-This keeps statuses up to date every night and syncs Instagram every 30 minutes.
-If your server's PHP 8.3 is somewhere else, ask the host, or try `/usr/local/bin/php` if that one is 8.3+.
+It sends phone notifications, event reminders and batched club emails every minute, refreshes statuses nightly and syncs Instagram every 30 minutes.
+Use the PHP 8.3 binary (`ea-php83`), not plain `php`, which may be an older version. Check it's working in **Settings > Cron job**.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for why every job runs in-process (hosts that disable `proc_open`).
 
 ### Part C: first-day setup inside YCC Hub
 
@@ -181,9 +189,8 @@ If your server's PHP 8.3 is somewhere else, ask the host, or try `/usr/local/bin
 | Uploaded posters don't show | `public/uploads` isn't writable (Step 12). |
 
 ### Updating later
-Make changes on your laptop, run `composer install --no-dev` if packages changed (and `npm run build` if styles changed), then upload the changed files.
-If an update adds a migration, add a one-off cron job running
-`/opt/cpanel/ea-php83/root/usr/bin/php /home/cpuser/public_html/ycc-hub/artisan migrate --force`, wait a minute, then delete that cron job.
+Run `npm run build`, then upload the changed files plus the whole `public/build` folder (delete the old `public/build` on the server first).
+If the update adds a migration, press **Update database** in **Settings** (no terminal needed). Full steps: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ### Running it locally (optional)
 ```
@@ -220,7 +227,7 @@ Paste post links (one per line) in the same settings box. They render with Insta
 ## 5. Data and privacy (PDPA 2010)
 
 - Registration requires consent to the personal data notice (`pdpa_consent_at`).
-- Contact details are visible to exco/admin only.
+- Contact details are visible to the MT, the advisor and the superadmin only, and are left out of event reports.
 - Every CSV export is logged (who, when, filter, rows): **Admin > Settings > Export log**.
 - To remove a member's data on request, an admin can suspend the account; full deletion is a database delete (registrations cascade).
 
@@ -232,6 +239,12 @@ Paste post links (one per line) in the same settings box. They render with Insta
 | Status engine | `app/Services/ActivityStatusService.php` |
 | Registration, capacity lock, attendance, QR | `app/Services/ProgramRegistrationService.php` |
 | Instagram | `app/Services/InstagramFeedService.php` |
+| Merit | `app/Services/MeritService.php` |
+| Email members, reminders | `app/Services/AnnouncementService.php`, `app/Services/EventReminderService.php` |
+| Phone notifications | `app/Services/PushService.php`, `app/Support/WebPush.php`, `resources/views/pwa/sw.blade.php` |
+| MT positions and handover | `app/Services/MtService.php` |
+| Cron jobs and fallback | `routes/console.php`, `app/Support/Scheduler.php` |
+| Event report | `app/Http/Controllers/Exco/EventReportController.php`, `resources/views/exco/report.blade.php` |
 | Settings, rules, faculty list | `config/ycc.php`, `.env` |
 | Analytics | `app/Http/Controllers/Admin/AnalyticsController.php` |
 | Views | `resources/views` (layouts in `components/layouts`) |
