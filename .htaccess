@@ -1,0 +1,33 @@
+# YCC Hub - root .htaccess
+#
+# Used only when the project folder sits inside public_html and is opened as a
+# subfolder (e.g. https://conservems.my/ycc-hub). A subdomain pointing at
+# public/ uses public/.htaccess instead.
+
+Options -Indexes -MultiViews
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Ignore the Node.js proxy rules in public_html/.htaccess on conservems.my.
+    RewriteOptions IgnoreInherit
+
+    # Never serve project files (.env, vendor, storage, source code...).
+    RewriteRule ^(\.|vendor/|storage/|app/|bootstrap/|config/|database/|resources/|routes/|tests/|node_modules/|lang/|artisan$|composer\.|package(-lock)?\.json$|phpunit\.xml$|vite\.config\.js$|README\.md$) - [F,L]
+
+    # Static files live in public/.
+    RewriteRule ^(build|images|uploads)/(.+)$ public/$1/$2 [L]
+    RewriteRule ^(favicon-32\.png|favicon-64\.png|robots\.txt)$ public/$1 [L]
+
+    # Let requests already rewritten into public/ through.
+    RewriteRule ^public/ - [L]
+    RewriteRule ^index\.php$ - [L]
+
+    # Everything else goes to Laravel.
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Without mod_rewrite, refuse to serve anything from the project root.
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

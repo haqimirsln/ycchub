@@ -1,0 +1,371 @@
+@import '@fontsource/big-shoulders-display/600';
+@import '@fontsource/big-shoulders-display/800';
+@import '@fontsource/public-sans/400';
+@import '@fontsource/public-sans/700';
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/*
+ * YCC Hub tokens
+ * abyss  - night sea at Chagar Hutang, used for the public site and the app rail
+ * crest  - the gold of the club crest
+ * glass  - sea glass, the app background
+ * kelp   - deep green-teal for secondary surfaces
+ */
+@theme {
+    --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --color-abyss-950: #061418;
+    --color-abyss-900: #0a1e24;
+    --color-abyss-800: #10303a;
+    --color-abyss-700: #1a4350;
+    --color-abyss-600: #2a5b69;
+
+    --color-crest-300: #f3d27a;
+    --color-crest-400: #e9be4f;
+    --color-crest-500: #d9aa2e;
+    --color-crest-600: #b58a1c;
+    --color-crest-700: #8a6814;
+
+    --color-glass-50: #f5f8f7;
+    --color-glass-100: #eaf1ee;
+    --color-glass-200: #d6e3de;
+    --color-glass-300: #b9cec7;
+
+    --color-kelp-500: #2f6f62;
+    --color-kelp-700: #1f4d47;
+
+    --color-ink: #13211f;
+    --color-ink-soft: #4a5e5a;
+
+    --color-st-active: #23784f;
+    --color-st-risk: #b7790a;
+    --color-st-inactive: #b93a2f;
+    --color-st-new: #2f6a9a;
+}
+
+@layer base {
+    :root {
+        /* Height of the public site header (logo row + 1px border). The hero uses it to fill one screen exactly. */
+        --header-h: 4.0625rem;
+    }
+    html {
+        -webkit-tap-highlight-color: transparent;
+    }
+    a, button, [role="tab"], label, summary, select {
+        /* No double-tap-to-zoom wait on phones: taps register immediately. */
+        touch-action: manipulation;
+    }
+    body {
+        @apply font-sans text-ink antialiased;
+        font-size: 1rem;
+        line-height: 1.55;
+        /* Keep content clear of the notch when a phone is turned sideways. */
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    h1, h2, h3 {
+        @apply font-display;
+        letter-spacing: 0.005em;
+        line-height: 1.02;
+    }
+    :focus-visible {
+        outline: 3px solid var(--color-crest-400);
+        outline-offset: 2px;
+    }
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .panel {
+        @apply rounded-lg border border-glass-200 bg-white;
+    }
+
+    .field-label {
+        @apply mb-1.5 block text-sm font-bold text-ink;
+    }
+    /* Every text box and dropdown is the same 44px tall, so rows of controls line up. */
+    .field {
+        @apply block w-full min-w-0 rounded-md border border-glass-300 bg-white px-3 text-[1rem] text-ink placeholder:text-ink-soft/60 hover:border-glass-300 focus:border-abyss-600 focus:outline-none focus:ring-2 focus:ring-crest-400/40;
+        min-height: 2.75rem;
+        transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+    }
+    input.field, select.field {
+        height: 2.75rem;
+    }
+    textarea.field {
+        @apply py-2.5;
+    }
+    /* Our own arrow on dropdowns: same look in every browser, and it never sits on top of the text. */
+    select.field {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 2.25rem;
+        text-overflow: ellipsis;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5e5a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.7rem center;
+        background-size: 1.1rem;
+        cursor: pointer;
+    }
+    select.field-sm {
+        height: 2.25rem;
+        min-height: 2.25rem;
+        @apply text-sm;
+    }
+    /* A filter bar: search grows, dropdowns take the width their longest option needs. */
+    .toolbar {
+        @apply flex flex-wrap items-end gap-3;
+    }
+    .toolbar > .toolbar-grow {
+        @apply min-w-[14rem] flex-[1_1_16rem];
+    }
+    .toolbar > select.field {
+        @apply w-full sm:w-auto;
+    }
+
+    /* Radio cards (faculty picker, visibility choice). */
+    .choice-card {
+        @apply flex cursor-pointer items-start gap-3 rounded-md border border-glass-300 bg-white px-3.5 py-3 hover:border-abyss-600/50;
+        transition: border-color 150ms ease-out, background-color 150ms ease-out;
+    }
+    .choice-card:has(input:checked) {
+        @apply border-abyss-700 bg-glass-50;
+        box-shadow: inset 0 0 0 1px var(--color-abyss-700);
+    }
+    .choice-card:has(input:focus-visible) {
+        outline: 3px solid var(--color-crest-400);
+        outline-offset: 2px;
+    }
+    .choice-dot {
+        @apply mt-0.5 size-4 shrink-0 rounded-full border-2 border-glass-300 bg-white;
+        transition: border-color 150ms ease-out, border-width 150ms ease-out;
+    }
+    .choice-card:has(input:checked) .choice-dot {
+        @apply border-abyss-800;
+        border-width: 5px;
+    }
+
+    /* Two or more options side by side (Upcoming / Past, status tabs). */
+    .segmented {
+        @apply inline-flex gap-1 rounded-md border border-glass-300 bg-white p-1;
+    }
+    .segment {
+        @apply whitespace-nowrap rounded px-3.5 py-1.5 text-sm font-bold text-ink-soft hover:bg-glass-50 hover:text-ink;
+        transition: color 150ms ease-out, background-color 150ms ease-out;
+    }
+    .segment.is-active {
+        @apply bg-abyss-900 text-white hover:bg-abyss-900 hover:text-white;
+    }
+
+    /* Email editor toolbar buttons. */
+    .tb-btn {
+        @apply inline-flex h-9 min-w-9 items-center justify-center rounded-md text-ink transition-colors hover:bg-white disabled:pointer-events-none disabled:opacity-35;
+    }
+    .tb-btn.is-on {
+        @apply bg-abyss-900 text-white hover:bg-abyss-900;
+    }
+    .field-error {
+        @apply mt-1 text-sm text-st-inactive;
+    }
+    .field-hint {
+        @apply mt-1 text-sm text-ink-soft;
+    }
+
+    .table-clean {
+        @apply w-full text-left text-sm;
+    }
+    .table-clean th {
+        @apply border-b border-glass-200 bg-glass-50 px-4 py-2.5 text-[0.8rem] font-bold text-ink-soft;
+    }
+    .table-clean td {
+        @apply border-b border-glass-100 px-4 py-3 align-middle tabular-nums;
+    }
+    .table-clean tbody tr {
+        transition: background-color 120ms ease-out;
+    }
+    .table-clean tbody tr:hover {
+        @apply bg-glass-50/70;
+    }
+    .table-clean tbody tr:last-child td {
+        @apply border-b-0;
+    }
+
+    .nav-link {
+        @apply flex items-center gap-3 rounded-md px-3 py-2 text-[0.95rem] text-glass-200 transition-colors duration-150 ease-out hover:bg-abyss-800 hover:text-white active:bg-abyss-700;
+    }
+    .nav-link.is-active {
+        @apply bg-abyss-800 text-crest-300;
+        box-shadow: inset 3px 0 0 var(--color-crest-500);
+    }
+
+    .prose-ycc p + p {
+        margin-top: 0.9em;
+    }
+}
+
+@utility btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2 text-[0.95rem] font-bold whitespace-nowrap select-none disabled:cursor-not-allowed disabled:opacity-50;
+    transition: color 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out, transform 120ms ease-out;
+    &:active:not(:disabled) {
+        transform: scale(0.97);
+    }
+}
+@utility btn-gold {
+    @apply btn bg-crest-500 text-abyss-950 hover:bg-crest-400;
+}
+@utility btn-dark {
+    @apply btn bg-abyss-900 text-white hover:bg-abyss-800;
+}
+@utility btn-line {
+    @apply btn border border-glass-300 bg-white text-ink hover:border-abyss-600;
+}
+@utility btn-ghost-light {
+    @apply btn border border-white/25 text-white hover:border-crest-400 hover:text-crest-300;
+}
+@utility btn-danger {
+    @apply btn border border-st-inactive/30 bg-white text-st-inactive hover:bg-st-inactive hover:text-white;
+}
+/* For repeated destructive actions in a list: calm until you point at it. */
+@utility btn-quiet-danger {
+    @apply btn border border-glass-300 bg-white text-ink-soft hover:border-st-inactive hover:bg-st-inactive hover:text-white;
+}
+/* Log out: solid red so it is easy to find and never mistaken for a nav link. */
+@utility btn-logout {
+    @apply btn bg-st-inactive text-white hover:bg-[#9e3128];
+}
+@utility btn-sm {
+    @apply min-h-9 px-3 py-1.5 text-sm;
+}
+
+
+/* The one moving thing on the public site: the Instagram tide. */
+@keyframes tide-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+.tide-track {
+    animation: tide-left var(--tide-speed, 70s) linear infinite;
+    width: max-content;
+}
+.tide:hover .tide-track,
+.tide:focus-within .tide-track {
+    animation-play-state: paused;
+}
+.tide-reverse .tide-track {
+    animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+    .tide-track {
+        animation: none;
+        width: auto;
+    }
+    .tide-row {
+        overflow-x: auto;
+    }
+}
+
+/*
+ * Page changes: no cross-page fade on purpose. While a fade runs the browser covers the
+ * new page and swallows taps for ~200ms, which makes fast clicking feel broken. Speed comes
+ * from prefetching instead (see the speculationrules script in layouts/base), and the
+ * browser keeps the old page on screen until the new one is ready, so there is no white flash.
+ */
+
+/* Thin gold bar at the top while the next page loads (set by app.js). */
+#nav-progress {
+    position: fixed;
+    inset: 0 auto auto 0;
+    z-index: 60;
+    height: 3px;
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+    background: var(--color-crest-400);
+    box-shadow: 0 0 8px rgb(233 190 79 / 0.6);
+    opacity: 0;
+    pointer-events: none;
+}
+#nav-progress.is-loading {
+    opacity: 1;
+    transform: scaleX(0.85);
+    transition: transform 2.5s cubic-bezier(0.1, 0.7, 0.2, 1), opacity 80ms linear;
+}
+#nav-progress.is-done {
+    opacity: 0;
+    transform: scaleX(1);
+    transition: transform 120ms ease-out, opacity 200ms ease-out 80ms;
+}
+
+/* A button whose form is being sent: shows a spinner and ignores extra taps. */
+.is-busy {
+    pointer-events: none;
+    opacity: 0.8;
+}
+.is-busy::after {
+    content: "";
+    width: 1em;
+    height: 1em;
+    border-radius: 9999px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    animation: ycc-spin 600ms linear infinite;
+}
+@keyframes ycc-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [class*="btn"]:active {
+        transform: none !important;
+    }
+    #nav-progress.is-loading,
+    #nav-progress.is-done {
+        transition: opacity 80ms linear;
+    }
+}
+
+/* Email members editor: looks like the email will. */
+.email-editor-content {
+    min-height: 16rem;
+    padding: 0.9rem 1rem;
+    outline: none;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-ink, #1f2a28);
+}
+.email-editor-content > * + * { margin-top: 0.75em; }
+.email-editor-content h2 { font-family: inherit; font-size: 1.35rem; font-weight: 800; line-height: 1.3; }
+.email-editor-content h3 { font-family: inherit; font-size: 1.1rem; font-weight: 800; line-height: 1.35; }
+.email-editor-content ul { list-style: disc; padding-left: 1.4rem; }
+.email-editor-content ol { list-style: decimal; padding-left: 1.4rem; }
+.email-editor-content li > p { margin: 0; }
+.email-editor-content blockquote { border-left: 4px solid #d9aa2e; padding-left: 0.9rem; color: #4a5b57; }
+.email-editor-content a { color: #1f6f61; text-decoration: underline; }
+.email-editor-content hr { border: 0; border-top: 1px solid #d6e3de; margin: 1.25rem 0; }
+.email-editor-content img { display: block; max-width: 100%; height: auto; border-radius: 0.5rem; }
+.email-editor-content img.ProseMirror-selectednode { outline: 3px solid #d9aa2e; outline-offset: 2px; }
+.email-editor-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: #8a9a96;
+}
+.email-editor-content:focus-visible { outline: none; }
+
+/* Advisors see MT pages read-only: anything that would save something is hidden
+   (the server refuses it anyway). */
+.view-only form[method="post" i],
+.view-only form[method="POST"],
+.view-only a[href$="/edit"],
+.view-only a[href$="/programs/create"],
+.view-only a[href*="/qr"],
+.view-only [data-mt-action] {
+    display: none !important;
+}
